@@ -25,6 +25,11 @@ assert('PureRegexp : StringClass') do
   assert_true  /[a-e]/i    === "HELLO"
   assert_false /[^0-9]/i   === "12345"
   assert_true  /[^0\\-9]/i === "12345"
+
+  assert_true  /\d\d\s/i === "123 45"
+  assert_true  /\d\D\d/i === "123 45"
+  assert_true  /\w\W/i === "123_45?"
+  assert_true  /\h\H/i === "12f_45"
 end
 
 assert('PureRegexp : Any') do
@@ -61,7 +66,7 @@ assert('PureRegexp : Group') do
   assert_equal ["", nil], /(zzz)?/.match("abc").to_a
 
   assert_equal ["abc", "abc", "abc", "abc", "abc", "abc"],
-               /(((((abc)))))/.match("abc").to_a
+               /(((((\h\h\h)))))/.match("abc").to_a
 
   assert_equal ["abcdefghijklm", "bcdefghijkl", "cdefghijk", "defghij", "efghi", "fgh", "g"],
                /a(b(c(d(e(f(g)h)i)j)k)l)m/.match("abcdefghijklm").to_a

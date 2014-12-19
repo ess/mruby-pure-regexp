@@ -25,8 +25,22 @@ class PureRegexp
         c = regexp[i]
         if escape
           case c
-          when 'n'
-            nodes << Node::String.new("\n")
+          when 'w'
+            nodes << Node::CharacterClass.new(expand_range("a-zA-Z0-9_"), false)
+          when 'W'
+            nodes << Node::CharacterClass.new(expand_range("a-zA-Z0-9_"), true)
+          when 's'
+            nodes << Node::CharacterClass.new(expand_range(" \t\r\n\f\v"), false)
+          when 'S'
+            nodes << Node::CharacterClass.new(expand_range(" \t\r\n\f\v"), true)
+          when 'd'
+            nodes << Node::CharacterClass.new(expand_range("0-9"), false)
+          when 'D'
+            nodes << Node::CharacterClass.new(expand_range("0-9"), true)
+          when 'h'
+            nodes << Node::CharacterClass.new(expand_range("0-9a-fA-F"), false)
+          when 'H'
+            nodes << Node::CharacterClass.new(expand_range("0-9a-fA-F"), true)
           else
             nodes << Node::String.new(c)
           end
@@ -111,17 +125,7 @@ class PureRegexp
             exp[0] = ''
             inverse = true
           end
-          exp.scan(/(.)-(.)/).each do |b, e|
-            next if b == '\\'
-            map = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-            first = map.index(b)
-            last = map.index(e)
-            if first.nil? || first.nil? || first > last
-              raise SyntaxError.new("empty range in char class")
-            end
-            exp.gsub!("#{b}-#{e}", map[first..last])
-          end
-          exp.gsub! '\-', '-'
+          exp = expand_range(exp)
           nodes << Node::CharacterClass.new(exp, inverse)
         else
           nodes << Node::String.new(c)
@@ -140,6 +144,21 @@ class PureRegexp
         end
       end
       Node::Group.new(compact, index)
+    end
+
+    def expand_range(string)
+      exp = string
+      exp.scan(/(.)-(.)/).each do |b, e|
+        next if b == '\\'
+        map = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        first = map.index(b)
+        last = map.index(e)
+        if first.nil? || first.nil? || first > last
+          raise SyntaxError.new("empty range in char class")
+        end
+        exp.gsub!("#{b}-#{e}", map[first..last])
+      end
+      exp.gsub '\-', '-'
     end
   end
 end
