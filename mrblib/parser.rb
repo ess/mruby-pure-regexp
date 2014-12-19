@@ -150,10 +150,10 @@ class PureRegexp
       exp = string
       exp.scan(/(.)-(.)/).each do |b, e|
         next if b == '\\'
-        map = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        map = "0123456789|abcdefghijklmnopqrstuvwxyz|ABCDEFGHIJKLMNOPQRSTUVWXYZ"
         first = map.index(b)
         last = map.index(e)
-        if first.nil? || first.nil? || first > last
+        if first.nil? || last.nil? || first > last || !map[first..last].index('|').nil?
           raise SyntaxError.new("empty range in char class")
         end
         exp.gsub!("#{b}-#{e}", map[first..last])
