@@ -89,7 +89,7 @@ class PureRegexp
           compact << n
         end
       end
-      Node::Group.new(index, compact)
+      Node::Group.new(compact, index)
     end
   end
 end

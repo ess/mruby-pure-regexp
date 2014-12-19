@@ -36,7 +36,7 @@ class PureRegexp
 
   module Node
     class Group
-      def initialize(tag, nodes)
+      def initialize(nodes, tag = nil)
         @nodes = nodes
         @tag = tag
       end
@@ -83,7 +83,7 @@ class PureRegexp
           index += m.flatten.inject(0) {|sum, n| sum + n}
         end
         len = matches.flatten.inject(0) {|sum, n| sum + n}
-        if len > 0
+        if len > 0 && !@tag.nil?
           ctx.submatch[@tag] = (input.range.first)..(input.range.first+len-1)
         end
       end
