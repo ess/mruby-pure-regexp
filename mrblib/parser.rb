@@ -78,6 +78,51 @@ class PureRegexp
           nodes << make_group(exp)
         when ')'
           raise SyntaxError.new("unmatched close parenthesis") if group != 0
+        when '['
+          i += 1
+          group = 1
+          exp = ""
+          gescape = false
+          while i < regexp.length
+            c = regexp[i]
+            if c == ']' && !gescape
+              gescape = false
+              group -= 1
+              if group == 0
+                break
+              else
+                exp += c
+              end
+            elsif c == '[' && !gescape
+              gescape = false
+              group += 1
+              exp += c
+            else
+              gescape = (c == "\\")
+              exp += c
+            end
+            i += 1
+          end
+          if gescape
+            raise RegexpError.new("premature end of char-class")
+          end
+          inverse = false
+          if exp[0] == '^'
+            exp[0] = ''
+            inverse = true
+          end
+          exp.scan(/(.)-(.)/).each do |b, e|
+            next if b == '\\'
+            map = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+            first = map.index(b)
+            last = map.index(e)
+            if first.nil? || first.nil? || first > last
+              raise SyntaxError.new("empty range in char class")
+            end
+            exp.gsub!("#{b}-#{e}", map[first..last])
+          end
+          exp.gsub! '\-', '-'
+          nodes << Node::CharacterClass.new(exp, inverse)
         else
           nodes << Node::String.new(c)
         end

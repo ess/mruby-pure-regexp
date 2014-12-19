@@ -20,6 +20,13 @@ assert('PureRegexp : String') do
   assert_false /hello/i === "Bye"
 end
 
+assert('PureRegexp : StringClass') do
+  assert_true  /[a-e]/     === "hello"
+  assert_true  /[a-e]/i    === "HELLO"
+  assert_false /[^0-9]/i   === "12345"
+  assert_true  /[^0\\-9]/i === "12345"
+end
+
 assert('PureRegexp : Any') do
   assert_true  /...../  === "hello"
   assert_true  /h.l.o/i === "heLoo"

@@ -11,6 +11,8 @@ Pure mruby Regexp
 * ```?``` Zero or one
 * ```^``` Start of line
 * ```$``` End of line
+* ```[]``` Character class
+* ```[^]``` Negated character class
 * ```()``` Group
 * ```(?:)``` Non-capturing group
 

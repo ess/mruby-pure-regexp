@@ -142,6 +142,29 @@ class PureRegexp
       end
     end
 
+    class CharacterClass
+      def initialize(chars, inverse=false)
+        @chars = chars
+        @inverse = inverse
+      end
+
+      def match(ctx, input)
+        m = false
+        unless input.str.empty?
+          if input.option & IGNORECASE == IGNORECASE
+            m = !@chars.downcase.index(input.str[0].downcase).nil?
+          else
+            m = !@chars.index(input.str[0]).nil?
+          end
+        end
+        m = !m if @inverse
+        Result.new(input.range, m ? [[1]] : [])
+      end
+
+      def submatch(ctx, input, matches)
+      end
+    end
+
     class Front
       def match(ctx, input)
         m = input.range.first == 0 ? [[]] : []
