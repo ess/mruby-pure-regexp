@@ -12,7 +12,12 @@ class PureRegexp
 
     def make_group(regexp)
       index = @index
-      @index += 1
+      if regexp.index("?:") == 0
+        regexp = regexp[2..(regexp.length-1)]
+        index = nil
+      else
+        @index += 1
+      end
       nodes = []
       i = 0
       escape = false

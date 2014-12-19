@@ -59,5 +59,8 @@ assert('PureRegexp : Group') do
   assert_equal ["abcdefghijklm", "bcdefghijkl", "cdefghijk", "defghij", "efghi", "fgh", "g"],
                /a(b(c(d(e(f(g)h)i)j)k)l)m/.match("abcdefghijklm").to_a
 
+  assert_equal ["abcdefghijklm", "bcdefghijkl", "defghij", "g"],
+               /a(b(?:c(d(?:e(?:f(g)h)i)j)k)l)m/.match("abcdefghijklm").to_a
+
   assert_equal ["zx", "zx", "z"], /((z)?x)?/.match("zx").to_a
 end

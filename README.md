@@ -7,11 +7,12 @@ Pure mruby Regexp
 
 ## Metacharacters
 
-* ```()``` Group
 * ```.``` Any single character
 * ```?``` Zero or one
 * ```^``` Start of line
 * ```$``` End of line
+* ```()``` Group
+* ```(?:)``` Non-capturing group
 
 ## Options
 
