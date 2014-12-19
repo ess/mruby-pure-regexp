@@ -90,6 +90,7 @@ class PureRegexp
       raise TypeError.new("can't convert #{string.class.name} into String") unless string.is_a? String
       @template = []
 
+      digits = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
       meta = false
 
       i = 0
@@ -101,13 +102,13 @@ class PureRegexp
             @template << c
           end
           meta = !meta
-        when '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'
+        when *digits
           if meta
             num = c
             while i < string.length
               n = string[i+1]
               case n
-              when '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'
+              when *digits
                 num += n
               else
                 break
