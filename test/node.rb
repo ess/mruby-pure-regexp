@@ -60,6 +60,11 @@ assert('PureRegexp : ZeroOrOne') do
   assert_true /a?????/ === ""
 end
 
+assert('PureRegexp : ReluctantZeroOrOne') do
+  assert_equal ["", nil], /(abc)??/.match("abc").to_a
+  assert_equal ["abcabc", "abc"], /^(abc)??abc$/.match("abcabc").to_a
+end
+
 assert('PureRegexp : Group') do
   assert_equal ["", nil], /()/.match("").to_a
   assert_equal ["", nil], /()/.match("abc").to_a

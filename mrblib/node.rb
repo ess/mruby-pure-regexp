@@ -90,6 +90,7 @@ class PureRegexp
     end
 
   	class ZeroOrOne
+      attr_reader :child
   		def initialize(child)
   			@child = child
   		end
@@ -103,6 +104,21 @@ class PureRegexp
         @child.submatch(ctx, input, matches[0])
       end
   	end
+
+    class ReluctantZeroOrOne
+      def initialize(child)
+        @child = child
+      end
+
+      def match(ctx, input)
+        m = @child.match(ctx, input)
+        Result.new(input.range, (m.matches << [[]]).reverse.map {|n| [n]})
+      end
+
+      def submatch(ctx, input, matches)
+        @child.submatch(ctx, input, matches[0])
+      end
+    end
 
     # leaf
     class String
