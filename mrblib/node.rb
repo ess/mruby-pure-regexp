@@ -43,7 +43,7 @@ class PureRegexp
 
       def match(ctx, input)
         m = []
-        return Result.new(input.range, [[0]]) if @nodes.empty?
+        return Result.new(input.range, [[]]) if @nodes.empty?
         stack = [@nodes[0].match(ctx, input).matches]
         tagstack = []
         while !stack.empty?
