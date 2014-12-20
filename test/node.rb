@@ -65,6 +65,40 @@ assert('PureRegexp : ReluctantZeroOrOne') do
   assert_equal ["abcabc", "abc"], /^(abc)??abc$/.match("abcabc").to_a
 end
 
+assert('PureRegexp : ZeroOrMore') do
+  assert_true /a*b*c*/ === ""
+  assert_true /a*b*c*/ === "aa"
+  assert_true /a*b*c*/ === "bbbbbbbb"
+  assert_true /a*b*c*/ === "c"
+  assert_true /a*b*c*/ === "aabbbb"
+  assert_true /a*b*c*/ === "bbbbccccc"
+  assert_true /a*b*c*/ === "aaaacc"
+  assert_true /a*b*c*/ === "abcc"
+  assert_true /a*****/ === ""
+end
+
+assert('PureRegexp : ReluctantZeroOrMore') do
+  assert_equal ["", nil], /(abc)*?/.match("abc").to_a
+  assert_equal ["abcabc", "abc"], /^(abc)*?abc$/.match("abcabc").to_a
+end
+
+assert('PureRegexp : OneOrMore') do
+  assert_false /a+b+c+/ === ""
+  assert_true  /a+b+c+/ === "aabbcc"
+  assert_false /a+b+c+/ === "bbbbbbbb"
+  assert_true  /a+b+c+/ === "abcc"
+  assert_true  /a+b+c+/ === "aabbbbc"
+  assert_true  /a+b+c+/ === "abbbbccccc"
+  assert_false /a+b+c+/ === "aaaacc"
+  assert_true  /a+b+c+/ === "abcc"
+  assert_true  /a+++/   === "aaaa"
+end
+
+assert('PureRegexp : ReluctantOneOrMore') do
+  assert_equal ["abc", "abc"], /(abc)+?/.match("abcabc").to_a
+  assert_equal ["abcabcabc", "abc"], /^(abc)+?abc$/.match("abcabcabc").to_a
+end
+
 assert('PureRegexp : Group') do
   assert_equal ["", nil], /()/.match("").to_a
   assert_equal ["", nil], /()/.match("abc").to_a

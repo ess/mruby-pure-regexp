@@ -51,13 +51,19 @@ class PureRegexp
 			case c
 			when '\\'
 			escape = true
-			when '?'
+		when '?'
 			raise SyntaxError.new("target of repeat operator is not specified") if nodes.empty?
       if nodes.last.class == Node::Repeat && !nodes.last.reluctant
         nodes << nodes.pop.make_reluctant
       else
         nodes << Node::Repeat.new(nodes.pop, false, 0, 1)
       end
+    when '*'
+      raise SyntaxError.new("target of repeat operator is not specified") if nodes.empty?
+      nodes << Node::Repeat.new(nodes.pop, false, 0)
+    when '+'
+      raise SyntaxError.new("target of repeat operator is not specified") if nodes.empty?
+      nodes << Node::Repeat.new(nodes.pop, false, 1)
 		when '.'
 		nodes << Node::Any.new()
 		when '^'

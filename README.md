@@ -10,6 +10,10 @@ Pure mruby Regexp
 * ```.``` Any single character
 * ```?``` Zero or one
 * ```??``` Zero or one (reluctant)
+* ```*``` Zero or more
+* ```*?``` Zero or more (reluctant)
+* ```+``` One or more
+* ```+?``` One or more (reluctant)
 * ```^``` Start of line
 * ```$``` End of line
 * ```[]``` Character class
