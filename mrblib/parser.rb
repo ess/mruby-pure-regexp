@@ -53,12 +53,11 @@ class PureRegexp
 			escape = true
 			when '?'
 			raise SyntaxError.new("target of repeat operator is not specified") if nodes.empty?
-			case nodes.last
-			when Node::ZeroOrOne
-			nodes << Node::ReluctantZeroOrOne.new(nodes.pop.child)
-		else
-			nodes << Node::ZeroOrOne.new(nodes.pop)
-		end
+      if nodes.last.class == Node::Repeat && !nodes.last.reluctant
+        nodes << nodes.pop.make_reluctant
+      else
+        nodes << Node::Repeat.new(nodes.pop, false, 0, 1)
+      end
 		when '.'
 		nodes << Node::Any.new()
 		when '^'

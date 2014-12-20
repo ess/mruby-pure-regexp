@@ -89,35 +89,46 @@ module Node
 	end
 end
 
-class ZeroOrOne
-	attr_reader :child
-	def initialize(child)
-		@child = child
-	end
+class Repeat
+  attr_reader :child
+  attr_reader :reluctant
+  def initialize(child, reluctant, first=0, last=nil)
+    @child = child
+    @reluctant = reluctant
+    @first = first
+    @last = last
+  end
 
-	def match(ctx, input)
-		m = @child.match(ctx, input)
-		Result.new(input.range, (m.matches << [[]]).map {|n| [n]})
-	end
+  def match(ctx, input)
+    last = @last ? @last : input.to_s.length
+    groups = []
+    for i in @first..last
+      groups << Group.new([@child]*i)
+    end
+    groups.reverse! unless @reluctant
+    m = []
+    groups.each do |g|
+      m += g.match(ctx, input).matches
+    end
+    Result.new(input.range, m)
+  end
 
-	def submatch(ctx, input, matches)
-		@child.submatch(ctx, input, matches[0])
-	end
-end
+  def submatch(ctx, input, matches)
+    last = @last ? @last : input.to_s.length
+    groups = []
+    for i in @first..last
+      groups << Group.new([@child]*i)
+    end
+    groups.reverse! unless @reluctant
 
-class ReluctantZeroOrOne
-	def initialize(child)
-		@child = child
-	end
+    for i in 0..(groups.length-1)
+      groups[i].submatch(ctx, input, matches)
+    end
+  end
 
-	def match(ctx, input)
-		m = @child.match(ctx, input)
-		Result.new(input.range, (m.matches << [[]]).reverse.map {|n| [n]})
-	end
-
-	def submatch(ctx, input, matches)
-		@child.submatch(ctx, input, matches[0])
-	end
+  def make_reluctant
+    Repeat.new(@child, true, @first, @last)
+  end
 end
 
 # leaf
