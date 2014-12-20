@@ -1,7 +1,9 @@
 class PureRegexp
   class Context
     attr_reader :submatch
+    attr_reader :cache
     def initialize(input, keys)
+      @cache = {}
       @submatch = {}
       keys.each do |k|
         @submatch[k] = nil
@@ -42,6 +44,9 @@ class PureRegexp
       end
 
       def match(ctx, input)
+        key = ["Group", input.range, @nodes, @tag]
+        return Result.new(input.range, ctx.cache[key]) if ctx.cache.include?(key)
+
         m = []
         return Result.new(input.range, [[]]) if @nodes.empty?
         stack = [@nodes[0].match(ctx, input).matches]
@@ -71,6 +76,8 @@ class PureRegexp
             stack.push(@nodes[stack.length].match(ctx, i).matches)
           end
         end
+
+        ctx.cache[key] = m
         Result.new(input.range, m)
       end
 
@@ -102,6 +109,9 @@ class PureRegexp
       end
 
       def match(ctx, input)
+        key = ["Repeat", input.range, @child, @reluctant, @first, @last]
+        return Result.new(input.range, ctx.cache[key]) if ctx.cache.include?(key)
+
         last = @last ? @last : input.to_s.length
         groups = []
         for i in @first..last
@@ -112,6 +122,8 @@ class PureRegexp
         groups.each do |g|
           m += g.match(ctx, input).matches
         end
+
+        ctx.cache[key] = m
         Result.new(input.range, m)
       end
 
@@ -247,7 +259,19 @@ class PureRegexp
     attr_reader :matches
     def initialize(range, matches)
       @range = range
-      @matches = matches
+      @matches = _deep_clone(matches)
+    end
+
+    def _deep_clone(ary)
+      r = []
+      ary.each do |a|
+        if a.is_a? Array
+          r << _deep_clone(a)
+        else
+          r << a
+        end
+      end
+      r
     end
   end
 end
