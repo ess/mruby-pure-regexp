@@ -92,11 +92,13 @@ end
 class Repeat
   attr_reader :child
   attr_reader :reluctant
-  def initialize(child, reluctant, first=0, last=nil)
+  attr_reader :exactly
+  def initialize(child, reluctant, first=0, last=nil, exactly=false)
     @child = child
     @reluctant = reluctant
     @first = first
     @last = last
+    @exactly = exactly
   end
 
   def match(ctx, input)

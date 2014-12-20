@@ -53,7 +53,7 @@ class PureRegexp
 			escape = true
 		when '?'
 			raise SyntaxError.new("target of repeat operator is not specified") if nodes.empty?
-      if nodes.last.class == Node::Repeat && !nodes.last.reluctant
+      if nodes.last.class == Node::Repeat && !nodes.last.reluctant && !nodes.last.exactly
         nodes << nodes.pop.make_reluctant
       else
         nodes << Node::Repeat.new(nodes.pop, false, 0, 1)
@@ -64,6 +64,32 @@ class PureRegexp
     when '+'
       raise SyntaxError.new("target of repeat operator is not specified") if nodes.empty?
       nodes << Node::Repeat.new(nodes.pop, false, 1)
+    when '{'
+      range = regexp[i..(regexp).length-1].scan(/\{(\d*)(,?)(\d*)\}/)
+      if range.empty? || (range[0][0].nil? && range[0][2].nil?)
+        nodes << Node::String.new(c)
+      else
+        r = range[0]
+        if r[1].nil?
+          nodes << Node::Repeat.new(nodes.pop, false, r[0].to_i, r[0].to_i, true)
+          i += r[0].length + 1
+        else
+          i += 2
+          if r[0].nil?
+            r[0] = 0
+          else
+            i += r[0].length
+            r[0] = r[0].to_i
+          end
+          if r[2].nil?
+            r[2] = nil
+          else
+            i += r[2].length
+            r[2] = r[2].to_i
+          end
+          nodes << Node::Repeat.new(nodes.pop, false, r[0], r[2])
+        end
+      end
 		when '.'
 		nodes << Node::Any.new()
 		when '^'

@@ -99,6 +99,42 @@ assert('PureRegexp : ReluctantOneOrMore') do
   assert_equal ["abcabcabc", "abc"], /^(abc)+?abc$/.match("abcabcabc").to_a
 end
 
+assert('PureRegexp : Exactly') do
+  assert_true  /a{3}b/ === "aaaab"
+  assert_false /^a{3}b/ === "aaaab"
+  assert_true  /^a{3}?/ === "ab"
+end
+
+assert('PureRegexp : MoreOrEqual') do
+  assert_true  /a{3,}b/ === "aaaab"
+  assert_true /^a{3,}b/ === "aaaab"
+end
+
+assert('PureRegexp : ReluctantMoreOrEqual') do
+  assert_equal ["abcabcabc", "abc"],    /(abc){3,}?/.match("abcabcabcabc").to_a
+  assert_equal ["abcabcabcabc", "abc"], /^(abc){3,}?abc$/.match("abcabcabcabc").to_a
+end
+
+assert('PureRegexp : LessOrEqual') do
+  assert_true  /a{,3}b/ === "aab"
+  assert_false /^a{,3}b/ === "aaaab"
+end
+
+assert('PureRegexp : ReluctantLessOrEqual') do
+  assert_equal ["", nil],               /(abc){,4}?/.match("abcabcabcabc").to_a
+  assert_equal ["abcabcabcabc", "abc"], /^(abc){,4}?abc$/.match("abcabcabcabc").to_a
+end
+
+assert('PureRegexp : Between') do
+  assert_true  /a{3,5}b/ === "aaaab"
+  assert_false /^a{3,5}b/ === "aaaaaab"
+end
+
+assert('PureRegexp : ReluctantBetween') do
+  assert_equal ["abcabc", "abc"],    /(abc){2,5}?/.match("abcabcabcabc").to_a
+  assert_equal ["abcabcabc", "abc"], /(abc){2,5}?abc/.match("abcabcabcabc").to_a
+end
+
 assert('PureRegexp : Group') do
   assert_equal ["", nil], /()/.match("").to_a
   assert_equal ["", nil], /()/.match("abc").to_a
