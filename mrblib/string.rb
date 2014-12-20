@@ -34,7 +34,7 @@ class String
 	def gsub(*args, &block)
 		if args[0].is_a? Regexp
 			raise ArgumentError.new("wrong number of arguments") unless args.size == 2
-			ref = PureRegexp::BackReference.new(args[1])
+			ref = PureRegexp::ReplaceCapture.new(args[1])
 			str = ""
 			rstr = self
 			while !(m = args[0].match(rstr)).nil?
@@ -65,7 +65,7 @@ class String
 	def sub(*args, &block)
 		if args[0].is_a? Regexp
 			raise ArgumentError.new("wrong number of arguments") unless args.size == 2
-			ref = PureRegexp::BackReference.new(args[1])
+			ref = PureRegexp::ReplaceCapture.new(args[1])
 			m = args[0].match(self)
 			return self if m.nil?
 			m.pre_match + ref.to_s(m) + m.post_match
@@ -85,7 +85,7 @@ class String
 end
 
 class PureRegexp
-	class BackReference
+	class ReplaceCapture
 		def initialize(string)
 		raise TypeError.new("can't convert #{string.class.name} into String") unless string.is_a? String
 		@template = []
