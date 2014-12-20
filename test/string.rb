@@ -2,7 +2,7 @@ assert('String#scan') do
   assert_equal ["abcd", "efgh", "ijkl"], "abcdefghijklmn".scan(/..../)
 
   assert_equal [["b", "cd"], ["f", "gh"], ["j", "kl"]],
-               "abcdefghijklmn".scan(/.(.)(..)/)
+  "abcdefghijklmn".scan(/.(.)(..)/)
 
   "abcde".scan(/.(.)(..)/) do |a, b|
     assert_equal "b", a

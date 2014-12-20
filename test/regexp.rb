@@ -2,7 +2,7 @@ assert('PureRegexp.compile') do
   assert_false PureRegexp.compile("((a)?(z)?x)") === "ZX"
 
   assert_true PureRegexp.compile("((a)?(z)?x)",
-              PureRegexp::IGNORECASE) === "ZX"
+  PureRegexp::IGNORECASE) === "ZX"
 
   assert_false PureRegexp.compile("z.z", PureRegexp::IGNORECASE) === "z\nz"
 end
