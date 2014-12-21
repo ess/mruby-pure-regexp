@@ -196,7 +196,11 @@ class PureRegexp
 
     class CharacterClass
       def initialize(chars, inverse=false)
-        @chars = chars
+        h = {}
+        for i in 0..(chars.length-1)
+          h[chars[i]] = 0
+        end
+        @chars = h.keys.join
         @inverse = inverse
       end
 
