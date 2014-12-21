@@ -44,7 +44,7 @@ class PureRegexp
       end
 
       def match(ctx, input)
-        key = ["Group", input.range, @nodes, @tag]
+        key = [Group, input.range, @nodes, @tag]
         return Result.new(input.range, ctx.cache[key]) if ctx.cache.include?(key)
 
         m = []
@@ -109,7 +109,7 @@ class PureRegexp
       end
 
       def match(ctx, input)
-        key = ["Repeat", input.range, @child, @reluctant, @first, @last]
+        key = [Repeat, input.range, @child, @reluctant, @first, @last]
         return Result.new(input.range, ctx.cache[key]) if ctx.cache.include?(key)
 
         last = @last ? @last : input.to_s.length
@@ -277,7 +277,7 @@ class PureRegexp
 end
 
 # extension method
-# https://github.com/h2so5/mruby/blob/master/mrblib/array.rb
+# https://github.com/mruby/mruby/blob/master/mrbgems/mruby-array-ext/mrblib/array.rb
 unless Array.instance_methods(false).include?(:flatten)
   class Array
     def flatten(depth=nil)

@@ -10,6 +10,8 @@ class PureRegexp
       Root.new(regexp, group, keys)
     end
 
+    DIGITS = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
+
     def make_group(regexp)
       index = @index
       if regexp.index("?:") == 0
@@ -26,21 +28,21 @@ class PureRegexp
         if escape
           case c
           when 'w'
-            nodes << Node::CharacterClass.new(expand_range("a-zA-Z0-9_"), false)
+            nodes << CC_WORD
           when 'W'
-            nodes << Node::CharacterClass.new(expand_range("a-zA-Z0-9_"), true)
+            nodes << CC_NON_WORD
           when 's'
-            nodes << Node::CharacterClass.new(expand_range(" \t\r\n\f\v"), false)
+            nodes << CC_WHITESPACE
           when 'S'
-            nodes << Node::CharacterClass.new(expand_range(" \t\r\n\f\v"), true)
+            nodes << CC_NON_WHITESPACE
           when 'd'
-            nodes << Node::CharacterClass.new(expand_range("0-9"), false)
+            nodes << CC_DIGIT
           when 'D'
-            nodes << Node::CharacterClass.new(expand_range("0-9"), true)
+            nodes << CC_NON_DIGIT
           when 'h'
-            nodes << Node::CharacterClass.new(expand_range("0-9a-fA-F"), false)
+            nodes << CC_HEX
           when 'H'
-            nodes << Node::CharacterClass.new(expand_range("0-9a-fA-F"), true)
+            nodes << CC_NON_HEX
           else
             nodes << Node::String.new(c)
           end
@@ -65,7 +67,6 @@ class PureRegexp
           raise SyntaxError.new("target of repeat operator is not specified") if nodes.empty?
           nodes << Node::Repeat.new(nodes.pop, false, 1)
         when '{'
-          digits = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
           range = ''
           cnt = 0
           for n in (i+1)..(regexp.length-1)
@@ -73,7 +74,7 @@ class PureRegexp
             case c
             when '}'
               break
-            when *digits
+            when *DIGITS
               range += c
             when ','
               range += c
@@ -175,7 +176,7 @@ class PureRegexp
             exp[0] = ''
             inverse = true
           end
-          exp = expand_range(exp)
+          exp = Parser.expand_range(exp)
           nodes << Node::CharacterClass.new(exp, inverse)
         else
           nodes << Node::String.new(c)
@@ -196,7 +197,9 @@ class PureRegexp
       Node::Group.new(compact, index)
     end
 
-    def expand_range(string)
+    CC_RANGE_STR = "0123456789|abcdefghijklmnopqrstuvwxyz|ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+    def self.expand_range(string)
       exp = string
       offset = 0
       while !(i = exp.index('-', offset)).nil?
@@ -207,7 +210,7 @@ class PureRegexp
             if b == '\\'
               exp[i-1] = ''
             else
-              map = "0123456789|abcdefghijklmnopqrstuvwxyz|ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+              map = CC_RANGE_STR
               first = map.index(b)
               last = map.index(e)
               if first.nil? || last.nil? || first > last || !map[first..last].index('|').nil?
@@ -221,5 +224,14 @@ class PureRegexp
       end
       exp
     end
+
+    CC_WORD = Node::CharacterClass.new(expand_range("a-zA-Z0-9_"), false)
+    CC_NON_WORD = Node::CharacterClass.new(expand_range("a-zA-Z0-9_"), true)
+    CC_WHITESPACE = Node::CharacterClass.new(expand_range(" \t\r\n\f\v"), false)
+    CC_NON_WHITESPACE = Node::CharacterClass.new(expand_range(" \t\r\n\f\v"), true)
+    CC_DIGIT = Node::CharacterClass.new(expand_range("0-9"), false)
+    CC_NON_DIGIT = Node::CharacterClass.new(expand_range("0-9"), true)
+    CC_HEX = Node::CharacterClass.new(expand_range("0-9a-fA-F"), false)
+    CC_NON_HEX = Node::CharacterClass.new(expand_range("0-9a-fA-F"), true)
   end
 end
