@@ -14,9 +14,14 @@ class PureRegexp
 
     def make_group(regexp)
       index = @index
+      atomic = false
       if regexp.index("?:") == 0
         regexp = regexp[2..(regexp.length-1)]
         index = nil
+      elsif regexp.index("?>") == 0
+        regexp = regexp[2..(regexp.length-1)]
+        index = nil
+        atomic = true
       else
         @index += 1
       end
@@ -156,7 +161,7 @@ class PureRegexp
           end
           raise SyntaxError.new("unmatched close parenthesis") if group != 0
           g = make_group(exp)
-          if g.nodes.size == 1 && g.tag.nil?
+          if g.nodes.size == 1 && g.tag.nil? && !g.atomic
             # ungroup sigle-child non-capturing groups
             nodes << g.nodes[0]
           else
@@ -215,7 +220,7 @@ class PureRegexp
           compact << n
         end
       end
-      Node::Group.new(compact, index)
+      Node::Group.new(compact, index, atomic)
     end
 
     CC_RANGE_STR = "0123456789|abcdefghijklmnopqrstuvwxyz|ABCDEFGHIJKLMNOPQRSTUVWXYZ"

@@ -40,9 +40,11 @@ class PureRegexp
     class Group
       attr_reader :nodes
       attr_reader :tag
-      def initialize(nodes, tag = nil)
+      attr_reader :atomic
+      def initialize(nodes, tag = nil, atomic=false)
         @nodes = nodes
         @tag = tag
+        @atomic = atomic
       end
 
       def match(ctx, input)
@@ -69,7 +71,14 @@ class PureRegexp
               m.push(t)
             end
             stack.pop
-            stack.last.shift unless stack.empty?
+            unless stack.empty?
+              # atomic grouping
+              t = @nodes[stack.length-1]
+              if t.class == Node::Group && t.atomic
+                stack.pop
+              end
+              stack.last.shift
+            end
           else
             l = stack.inject(0) do |sum, n|
               sum + n.first.flatten.inject(0) {|sum, n| sum + n}

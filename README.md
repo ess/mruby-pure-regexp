@@ -27,6 +27,7 @@ Pure mruby Regexp
 * ```[^]``` Negated character class
 * ```()``` Group
 * ```(?:)``` Non-capturing group
+* ```(?>)``` Atomic group
 * ```\w``` Word character
 * ```\W``` Non-word character
 * ```\s``` Whitespace character

@@ -152,3 +152,8 @@ assert('PureRegexp : Group') do
 
   assert_equal ["zx", "zx", "z"], /((z)?x)?/.match("zx").to_a
 end
+
+assert('PureRegexp : AtomicGroup') do
+  assert_equal ['"Quote"'], /"(?>\w*)"/.match('"Quote"').to_a
+  assert_nil /"(?>.*)"/.match('"Quote"')
+end
