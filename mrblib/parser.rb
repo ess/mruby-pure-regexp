@@ -184,17 +184,28 @@ class PureRegexp
 
     def expand_range(string)
       exp = string
-      exp.scan(/(.)-(.)/).each do |b, e|
-        next if b == '\\'
-        map = "0123456789|abcdefghijklmnopqrstuvwxyz|ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-        first = map.index(b)
-        last = map.index(e)
-        if first.nil? || last.nil? || first > last || !map[first..last].index('|').nil?
-          raise SyntaxError.new("empty range in char class")
+      offset = 0
+      while !(i = exp.index('-', offset)).nil?
+        if i > 0
+          b = exp[i-1]
+          e = exp[i+1]
+          unless b.nil? || e.nil?
+            if b == '\\'
+              exp[i-1] = ''
+            else
+              map = "0123456789|abcdefghijklmnopqrstuvwxyz|ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+              first = map.index(b)
+              last = map.index(e)
+              if first.nil? || last.nil? || first > last || !map[first..last].index('|').nil?
+                raise SyntaxError.new("empty range in char class")
+              end
+              exp = exp[0, i-1] + map[first..last] + exp[(i+2)..-1]
+            end
+          end
         end
-        exp.gsub!("#{b}-#{e}", map[first..last])
+        offset += 1
       end
-      exp.gsub '\-', '-'
+      exp
     end
   end
 end

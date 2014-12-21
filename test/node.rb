@@ -25,6 +25,7 @@ assert('PureRegexp : StringClass') do
   assert_true  /[a-e]/i    === "HELLO"
   assert_false /[^0-9]/i   === "12345"
   assert_true  /[^0\\-9]/i === "12345"
+  assert_false /[1\\-9]/i  === '\\'
 
   assert_true  /\d\d\s/i === "123 45"
   assert_true  /\d\D\d/i === "123 45"
