@@ -77,7 +77,7 @@ class PureRegexp
               if t.class == Node::Group && t.atomic
                 stack.pop
               end
-              stack.last.shift
+              stack.last.shift unless stack.empty?
             end
           else
             l = stack.inject(0) do |sum, n|

@@ -156,4 +156,5 @@ end
 assert('PureRegexp : AtomicGroup') do
   assert_equal ['"Quote"'], /"(?>\w*)"/.match('"Quote"').to_a
   assert_nil /"(?>.*)"/.match('"Quote"')
+  assert_nil /(?>.*)"/.match('"Quote"')
 end
