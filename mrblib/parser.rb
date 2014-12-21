@@ -58,14 +58,29 @@ class PureRegexp
           if nodes.last.class == Node::Repeat && !nodes.last.reluctant && !nodes.last.exactly
             nodes << nodes.pop.make_reluctant
           else
-            nodes << Node::Repeat.new(nodes.pop, false, 0, 1)
+            n = Node::Repeat.new(nodes.last, false, 0, 1)
+            # ignore duplicated repeat operators for an optimization
+            unless nodes.last.class == Node::Repeat && nodes.last =~ n
+              nodes.pop
+              nodes << n
+            end
           end
         when '*'
           raise SyntaxError.new("target of repeat operator is not specified") if nodes.empty?
-          nodes << Node::Repeat.new(nodes.pop, false, 0)
+          n = Node::Repeat.new(nodes.last, false, 0)
+          # ignore duplicated repeat operators for an optimization
+          unless nodes.last.class == Node::Repeat && nodes.last =~ n
+            nodes.pop
+            nodes << n
+          end
         when '+'
           raise SyntaxError.new("target of repeat operator is not specified") if nodes.empty?
-          nodes << Node::Repeat.new(nodes.pop, false, 1)
+          n = Node::Repeat.new(nodes.last, false, 1)
+          # ignore duplicated repeat operators for an optimization
+          unless nodes.last.class == Node::Repeat && nodes.last =~ n
+            nodes.pop
+            nodes << n
+          end
         when '{'
           range = ''
           cnt = 0

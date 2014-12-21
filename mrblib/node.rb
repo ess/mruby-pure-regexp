@@ -100,12 +100,21 @@ class PureRegexp
       attr_reader :child
       attr_reader :reluctant
       attr_reader :exactly
+      attr_reader :first
+      attr_reader :last
       def initialize(child, reluctant, first=0, last=nil, exactly=false)
         @child = child
         @reluctant = reluctant
         @first = first
         @last = last
         @exactly = exactly
+      end
+
+      def =~(other)
+        reluctant == other.reluctant &&
+        exactly == other.exactly &&
+        first == other.first &&
+        last == other.last
       end
 
       def match(ctx, input)
