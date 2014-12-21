@@ -38,6 +38,8 @@ class PureRegexp
 
   module Node
     class Group
+      attr_reader :nodes
+      attr_reader :tag
       def initialize(nodes, tag = nil)
         @nodes = nodes
         @tag = tag

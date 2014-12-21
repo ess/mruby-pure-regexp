@@ -155,7 +155,13 @@ class PureRegexp
             raise RegexpError.new("too short escape sequence")
           end
           raise SyntaxError.new("unmatched close parenthesis") if group != 0
-          nodes << make_group(exp)
+          g = make_group(exp)
+          if g.nodes.size == 1 && g.tag.nil?
+            # ungroup sigle-child non-capturing groups
+            nodes << g.nodes[0]
+          else
+            nodes << g
+          end
         when ')'
           raise SyntaxError.new("unmatched close parenthesis") if group != 0
         when '['
