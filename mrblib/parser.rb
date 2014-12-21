@@ -65,30 +65,44 @@ class PureRegexp
           raise SyntaxError.new("target of repeat operator is not specified") if nodes.empty?
           nodes << Node::Repeat.new(nodes.pop, false, 1)
         when '{'
-          range = regexp[i..(regexp).length-1].scan(/\{(\d*)(,?)(\d*)\}/)
-          if range.empty? || (range[0][0].nil? && range[0][2].nil?)
-            nodes << Node::String.new(c)
-          else
-            r = range[0]
-            if r[1].nil?
-              nodes << Node::Repeat.new(nodes.pop, false, r[0].to_i, r[0].to_i, true)
-              i += r[0].length + 1
+          digits = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
+          range = ''
+          cnt = 0
+          for n in (i+1)..(regexp.length-1)
+            c = regexp[n]
+            case c
+            when '}'
+              break
+            when *digits
+              range += c
+            when ','
+              range += c
+              cnt += 1
             else
-              i += 2
-              if r[0].nil?
-                r[0] = 0
-              else
-                i += r[0].length
-                r[0] = r[0].to_i
-              end
-              if r[2].nil?
-                r[2] = nil
-              else
-                i += r[2].length
-                r[2] = r[2].to_i
-              end
-              nodes << Node::Repeat.new(nodes.pop, false, r[0], r[2])
+              break
             end
+          end
+          if range.empty? || cnt > 1
+            nodes << Node::String.new(c)
+          elsif cnt == 0
+            nodes << Node::Repeat.new(nodes.pop, false, range.to_i, range.to_i, true)
+            i += range.length + 1
+          elsif cnt == 1
+            i += 2
+            cin = range.index ','
+            b = range[0, cin]
+            e = range[(cin+1)..-1]
+            bi = 0
+            ei = nil
+            unless b.empty?
+              i += b.length
+              bi = b.to_i
+            end
+            unless e.empty?
+              i += e.length
+              ei = e.to_i
+            end
+            nodes << Node::Repeat.new(nodes.pop, false, bi, ei)
           end
         when '.'
           nodes << Node::Any.new()
