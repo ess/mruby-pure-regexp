@@ -9,10 +9,10 @@ Pure mruby Regexp
 
 * ```.``` Any single character
 * ```?``` Zero or one
-* ```??``` Zero or one (reluctant)
 * ```*``` Zero or more
-* ```*?``` Zero or more (reluctant)
 * ```+``` One or more
+* ```??``` Zero or one (reluctant)
+* ```*?``` Zero or more (reluctant)
 * ```+?``` One or more (reluctant)
 * ```{N}``` N times
 * ```{N,}``` N or more
@@ -23,6 +23,7 @@ Pure mruby Regexp
 * ```{N,M}?``` Between N and M (reluctant)
 * ```^``` Start of line
 * ```$``` End of line
+* ```|``` Alternation
 * ```[]``` Character class
 * ```[^]``` Negated character class
 * ```()``` Group
