@@ -95,6 +95,11 @@ assert('PureRegexp : OneOrMore') do
   assert_true  /a+++/   === "aaaa"
 end
 
+assert('PureRegexp : Alternation') do
+  assert_true  /(aa|bb|cc|k?)+/ === "kaacck"
+  assert_false /^(aa|a+|cc|k)+/ === "jkaacck"
+end
+
 assert('PureRegexp : ReluctantOneOrMore') do
   assert_equal ["abc", "abc"], /(abc)+?/.match("abcabc").to_a
   assert_equal ["abcabcabc", "abc"], /^(abc)+?abc$/.match("abcabcabc").to_a

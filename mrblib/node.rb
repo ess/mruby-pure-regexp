@@ -165,6 +165,34 @@ class PureRegexp
       end
     end
 
+    class Alternation
+      attr_reader :first
+      attr_reader :second
+      def initialize(first=nil, second=nil)
+        @first = first
+        @second = second
+      end
+
+      def match(ctx, input)
+        unless @first.nil?
+          m = @first.match(ctx, input).matches
+          return Result.new(input.range, [[m, []]]) unless m.empty?
+        end
+        unless @second.nil?
+           m = @second.match(ctx, input).matches
+          return Result.new(input.range, [[[], m]]) unless m.empty?
+        end
+        Result.new(input.range, [])
+      end
+
+      def submatch(ctx, input, matches)
+        unless matches.empty?
+          @first.submatch(ctx, input, matches[0]) unless @first.nil?
+          @second.submatch(ctx, input, matches[1]) unless @second.nil?
+        end
+      end
+    end
+
     # leaf
     class String
       attr_reader :str

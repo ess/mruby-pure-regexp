@@ -131,6 +131,8 @@ class PureRegexp
           nodes << Node::Front.new()
         when '$'
           nodes << Node::Back.new()
+        when '|'
+          nodes << Node::Alternation.new()
         when '('
           i += 1
           group = 1
@@ -212,6 +214,7 @@ class PureRegexp
       if escape
         raise RegexpError.new("too short escape sequence")
       end
+      # concatenate strings
       compact = []
       nodes.each do |n|
         if n.is_a?(Node::String) && compact.last.is_a?(Node::String)
@@ -220,7 +223,18 @@ class PureRegexp
           compact << n
         end
       end
-      Node::Group.new(compact, index, atomic)
+      # process Alternation
+       alter = []
+       compact.each do |n|
+         if n.is_a? Node::Alternation
+           alter << Node::Alternation.new(alter.pop)
+         elsif alter.last.is_a? Node::Alternation
+           alter << Node::Alternation.new(alter.pop.first, n)
+         else
+           alter << n
+         end
+       end
+      Node::Group.new(alter, index, atomic)
     end
 
     CC_RANGE_STR = "0123456789|abcdefghijklmnopqrstuvwxyz|ABCDEFGHIJKLMNOPQRSTUVWXYZ"
