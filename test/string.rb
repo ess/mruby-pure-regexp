@@ -17,10 +17,14 @@ end
 assert('String#gsub') do
   assert_equal "@-@-ackb@-@-", "acbabackbacbab".gsub(/a.?b/, "@-")
   assert_equal "@-acbcb@-abbackb@-acbcb@-abb", "acbabackbacbab".gsub(/a(.?b)/, '@-\0\1')
+  assert_equal "abackbacbabackbacbabackbab", "acbabackbacbab".gsub(/a(.?b)/, '\\\'')
+  assert_equal "cbbackbcbb", "acbabackbacbab".gsub(/a(.?b)/, '\+')
+  assert_equal "acbackbacbabackbacbabackbacb", "acbabackbacbab".gsub(/a(.?b)/, '\`')
+  assert_equal "acbabackbacbab", "acbabackbacbab".gsub(/a(.?b)/, '\&')
 end
 
 assert('String#gsub!') do
-  assert_equal "-------------", "acbabackbacbab".gsub!(/a.?b/, "@-").gsub!(/.?/, "-")
+  assert_equal "-------------", "@-@-ackb@-@-".gsub!(/.?/, "-")
 end
 
 assert('String#sub') do

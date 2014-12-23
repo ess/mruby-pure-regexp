@@ -36,16 +36,17 @@ class String
       raise ArgumentError.new("wrong number of arguments") unless args.size == 2
       ref = PureRegexp::ReplaceCapture.new(args[1])
       str = ""
-      rstr = self
-      while !(m = args[0].match(rstr)).nil?
-        str += m.pre_match + ref.to_s(m)
-        len = m.pre_match.length + m.to_s.length
+      index = 0
+      while !(m = args[0].match(self, index)).nil?
+        str += (m.pre_match[index..-1] || "") + ref.to_s(m)
+        len = m.begin(0) - index + m.to_s.length
         if len == 0
           len = 1
-          str += rstr[0..0]
+          n = self[(index+len+1)]
+          str += n unless n.nil?
         end
-        rstr = rstr[len..(rstr.length-1)]
-        break if rstr.nil?
+        break if m.begin(0) - index < 0
+        index += len
       end
       str
     else
@@ -87,6 +88,7 @@ end
 class PureRegexp
   class ReplaceCapture
     DIGITS = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
+    META = ['`', '\'', '+', '&']
 
     def initialize(string)
       raise TypeError.new("can't convert #{string.class.name} into String") unless string.is_a? String
@@ -110,6 +112,12 @@ class PureRegexp
             @template << c
           end
           meta = false
+        when *META
+          if meta
+            @template << c.to_sym
+          else
+            @template << c
+          end
         else
           if meta
             @template << c
@@ -125,9 +133,23 @@ class PureRegexp
       str = ""
       @template.each do |c|
         if c.is_a? Symbol
-          s = matches[c.to_s.to_i]
-          s = "" if s.nil?
-          str += s
+          c = c.to_s
+          case c
+          when *DIGITS
+            s = matches[c.to_s.to_i]
+            s = "" if s.nil?
+            str += s
+          when '`'
+            str += matches.pre_match
+          when '\''
+            str += matches.post_match
+          when '+'
+            unless matches.captures.empty?
+              str += matches.captures.last
+            end
+          when '&'
+            str += matches[0]
+          end
         else
           str += c
         end
