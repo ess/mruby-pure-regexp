@@ -105,18 +105,7 @@ class PureRegexp
           meta = !meta
         when *DIGITS
           if meta
-            num = c
-            while i < string.length
-              n = string[i+1]
-              case n
-              when *DIGITS
-                num += n
-              else
-                break
-              end
-              i += 1
-            end
-            @template << num.to_sym
+            @template << c.to_sym
           else
             @template << c
           end

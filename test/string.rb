@@ -26,9 +26,11 @@ end
 assert('String#sub') do
   assert_equal "@-abackbacbab", "acbabackbacbab".sub(/a.?b/, "@-")
   assert_equal "@-acbcbabackbacbab", "acbabackbacbab".sub(/a(.?b)/, '@-\0\1')
-
-  assert_equal  ",,,,,,a,ab,abc,abcd,abcde,abcdef,abcdefg,abcdefgh,abcdefghi,abcdefghij," +
-  "abcdefghijk,abcdefghijkl,abcdefghijklm,abcdefghijklmn,abcdefghijklmno,abcdefghijklmnop,qrs",
+  assert_equal  "abcdefghijklmn0,abcdefghijklmno9,abcdefghijklmn0," +
+  "abcdefghijklmno8,abcdefghijklmno7,abcdefghijklmno6,abcdefghijklmno5," +
+  "abcdefghijklmno4,abcdefghijklmno3,abcdefghijklmno2,abcdefghijklmno1," +
+  "abcdefghijklmno0,abcdefg,abcdefgh,abcdefghi,abcdefghij,abcdefghijk," +
+  "abcdefghijkl,abcdefghijklm,abcdefghijklmn,abcdefghijklmno,abcdefghijklmnop,qrs",
   "abcdefghijklmnopqrs".sub(/(((((((((((((((a)b)c)d)e)f)g)h)i)j)k)l)m)n)o)p/,
   '\20,\19,\20,\18,\17,\16,\15,\14,\13,\12,\11,\10,\9,\8,\7,\6,\5,\4,\3,\2,\1,\0,')
 end
