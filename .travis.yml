@@ -8,8 +8,8 @@ install:
     - sudo apt-get -qq install rake bison git gperf
 before_script:
   - cd ../
-  - git clone https://github.com/mruby/mruby.git
+  - git clone --depth=1 -b 1.0.0 https://github.com/mruby/mruby.git
   - cd mruby
   - cp -fp ../mruby-pure-regexp/.travis_build_config.rb build_config.rb
-script: 
+script:
   - make all test
