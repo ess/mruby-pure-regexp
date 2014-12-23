@@ -43,6 +43,14 @@ Pure mruby Regexp
 * ```\h``` Hexadecimal digit
 * ```\H``` Non-hexadecimal digit
 
+## Replacement metacharacters
+
+* ```\N``` Submatch
+* ```\&``` Entire match
+* ```\` ``` Substring before match
+* ```\'``` Substring after match
+* ```\+``` Last submatch
+
 ## Options
 
 * ```/i``` Case insensitive
