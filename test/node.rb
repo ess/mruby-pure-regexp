@@ -170,6 +170,11 @@ assert('PureRegexp : Group') do
   assert_equal ["zx", "zx", "z"], /((z)?x)?/.match("zx").to_a
 end
 
+assert('PureRegexp : NamedGroup') do
+  assert_equal "ab", /(?<xyz>ab)?/.match("abc")["xyz"]
+  assert_equal "b",  /(?'tty'a(?<xyz>b))?/.match("abc")["xyz"]
+end
+
 assert('PureRegexp : AtomicGroup') do
   assert_equal ['"Quote"'], /"(?>\w*)"/.match('"Quote"').to_a
   assert_nil /"(?>.*)"/.match('"Quote"')

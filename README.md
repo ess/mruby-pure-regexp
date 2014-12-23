@@ -30,6 +30,8 @@ Pure mruby Regexp
 * ```[]``` Character class
 * ```[^]``` Negated character class
 * ```()``` Group
+* ```(?<name>)``` Named group
+* ```(?'name')``` Named group
 * ```(?:)``` Non-capturing group
 * ```(?>)``` Atomic group
 * ```\w``` Word character

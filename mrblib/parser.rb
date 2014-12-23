@@ -22,6 +22,18 @@ class PureRegexp
         regexp = regexp[2..(regexp.length-1)]
         index = nil
         atomic = true
+      elsif regexp.index("?<") == 0
+        e = regexp.index(">")
+        raise SyntaxError.new("end pattern with unmatched parenthesis") if e.nil?
+        index = regexp[2..(e-1)]
+        raise SyntaxError.new("group name is empty") if index.empty?
+        regexp = regexp[(e+1)..(regexp.length-1)]
+      elsif regexp.index("?'") == 0
+        e = regexp.index("'", 2)
+        raise SyntaxError.new("end pattern with unmatched parenthesis") if e.nil?
+        index = regexp[2..(e-1)]
+        raise SyntaxError.new("group name is empty") if index.empty?
+        regexp = regexp[(e+1)..(regexp.length-1)]
       else
         @index += 1
       end

@@ -66,12 +66,15 @@ class PureMatchData
     @submatches = keys.map {|k| submatches[k]}
 
     keys = submatches.keys.select {|k| k.is_a? String }.sort
-    @namedsubmatches = keys.map {|k| submatches[k]}
+    @namedsubmatches ={}
+    keys.each do |k|
+      @namedsubmatches[k] = submatches[k]
+    end
   end
 
   def [](*args)
     if args.size == 1 && (args[0].is_a? String)
-      @namedsubmatches[args[0]]
+      string[@namedsubmatches[args[0]]]
     else
       to_a[*args]
     end
