@@ -80,11 +80,17 @@ class PureRegexp
           end
         when '+'
           raise SyntaxError.new("target of repeat operator is not specified") if nodes.empty?
-          n = Node::Repeat.new(nodes.last, false, 1)
-          # ignore duplicated repeat operators for an optimization
-          unless nodes.last.class == Node::Repeat && nodes.last =~ n
-            nodes.pop
-            nodes << n
+          l = nodes.last
+          if l.class == Node::Repeat && !l.reluctant &&
+            ((l.first == 0 && l.last == 1) || (l.first == 1 && l.last.nil?) || (l.first == 0 && l.last.nil?))
+            nodes << Node::Group.new([nodes.pop], nil, true)
+          else
+            n = Node::Repeat.new(nodes.last, false, 1)
+            # ignore duplicated repeat operators for an optimization
+            unless nodes.last.class == Node::Repeat && nodes.last =~ n
+              nodes.pop
+              nodes << n
+            end
           end
         when '{'
           range = ''

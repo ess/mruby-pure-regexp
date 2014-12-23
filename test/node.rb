@@ -66,6 +66,10 @@ assert('PureRegexp : ReluctantZeroOrOne') do
   assert_equal ["abcabc", "abc"], /^(abc)??abc$/.match("abcabc").to_a
 end
 
+assert('PureRegexp : PossessiveZeroOrOne') do
+  assert_false /.?+foo/ === "foo"
+end
+
 assert('PureRegexp : ZeroOrMore') do
   assert_true /a*b*c*/ === ""
   assert_true /a*b*c*/ === "aa"
@@ -81,6 +85,10 @@ end
 assert('PureRegexp : ReluctantZeroOrMore') do
   assert_equal ["", nil], /(abc)*?/.match("abc").to_a
   assert_equal ["abcabc", "abc"], /^(abc)*?abc$/.match("abcabc").to_a
+end
+
+assert('PureRegexp : PossessiveZeroOrMore') do
+  assert_false /.*+foo/ === "zzzzfoozzfoo"
 end
 
 assert('PureRegexp : OneOrMore') do
@@ -103,6 +111,10 @@ end
 assert('PureRegexp : ReluctantOneOrMore') do
   assert_equal ["abc", "abc"], /(abc)+?/.match("abcabc").to_a
   assert_equal ["abcabcabc", "abc"], /^(abc)+?abc$/.match("abcabcabc").to_a
+end
+
+assert('PureRegexp : PossessiveOneOrMore') do
+  assert_false /.++foo/ === "zzzzfoozzfoo"
 end
 
 assert('PureRegexp : Exactly') do

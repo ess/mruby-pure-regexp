@@ -14,6 +14,9 @@ Pure mruby Regexp
 * ```??``` Zero or one (reluctant)
 * ```*?``` Zero or more (reluctant)
 * ```+?``` One or more (reluctant)
+* ```?+``` Zero or one (possessive)
+* ```*+``` Zero or more (possessive)
+* ```++``` One or more (possessive)
 * ```{N}``` N times
 * ```{N,}``` N or more
 * ```{,N}``` N or less
