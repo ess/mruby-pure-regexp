@@ -34,6 +34,7 @@ Pure mruby Regexp
 * ```(?'name')``` Named group
 * ```(?:)``` Non-capturing group
 * ```(?>)``` Atomic group
+* ```\N``` Back reference
 * ```\w``` Word character
 * ```\W``` Non-word character
 * ```\s``` Whitespace character

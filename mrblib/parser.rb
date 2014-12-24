@@ -60,6 +60,8 @@ class PureRegexp
             nodes << CC_HEX
           when 'H'
             nodes << CC_NON_HEX
+          when *DIGITS
+            nodes << Node::BackReference.new(c.to_i)
           else
             nodes << Node::String.new(c)
           end

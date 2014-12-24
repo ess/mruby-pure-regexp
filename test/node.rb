@@ -108,6 +108,12 @@ assert('PureRegexp : Alternation') do
   assert_false /^(aa|a+|cc|k)+/ === "jkaacck"
 end
 
+assert('PureRegexp : BackReference') do
+  assert_true  /(...),\1+/ === "aaa,aaaaaa"
+  assert_true  /(.(.).),\2+/ === "axa,xaaaaa"
+  assert_false /(.(.).),\2+/ === "axa,axxxxx"
+end
+
 assert('PureRegexp : ReluctantOneOrMore') do
   assert_equal ["abc", "abc"], /(abc)+?/.match("abcabc").to_a
   assert_equal ["abcabcabc", "abc"], /^(abc)+?abc$/.match("abcabcabc").to_a

@@ -24,7 +24,7 @@ class PureRegexp
       range = input.range
       len = input.str.length
       for i in 0..(len == 0 ? 0 : len-1)
-        result = @group.match(ctx, input, 0)
+        result = @group.match(ctx, {}, input, 0)
         m = result.matches
         if !m.empty?
           @group.submatch(ctx, input, m)
@@ -47,9 +47,12 @@ class PureRegexp
         @atomic = atomic
       end
 
-      def match(ctx, input, index)
+      def match(ctx, bref, input, index)
         key = [Group, input.range, index, @nodes, @tag]
-        return Result.new(input.range, ctx.cache[key]) if ctx.cache.include?(key)
+        if ctx.cache.include?(key)
+          m = ctx.cache[key]
+          return Result.new(input.range, m)
+        end
 
         return Result.new(input.range, [[]]) if @nodes.empty?
         idx = [0] * @nodes.length
@@ -68,7 +71,7 @@ class PureRegexp
           end
           l = 0
           l = len[0..(i-1)].inject(0) {|sum, n| sum + n} if i > 0
-          n = @nodes[i].match(ctx, input.substr(l), idx[i]).matches
+          n = @nodes[i].match(ctx, bref, input.substr(l), idx[i]).matches
           mat[i] = n
           if n.empty?
             idx[i] += 1
@@ -78,8 +81,18 @@ class PureRegexp
             break
           else
             len[i] = n.flatten.inject(0){|sum, n| sum + n}
+            if @nodes[i].is_a? Node::Group
+              if !@nodes[i].tag.nil?
+                bref[@nodes[i].tag] = input.substr(l).str[0, len[i]]
+              end
+            end
           end
           i += 1
+        end
+
+        l = m.flatten.inject(0){|sum, n| sum + n}
+        if !@tag.nil?
+          bref[@tag] = input.str[0, l]
         end
 
         ctx.cache[key] = m
@@ -126,7 +139,7 @@ class PureRegexp
         last == other.last
       end
 
-      def match(ctx, input, index)
+      def match(ctx, bref, input, index)
         key = [Repeat, input.range, index, @child, @reluctant, @first, @last]
         return Result.new(input.range, ctx.cache[key]) if ctx.cache.include?(key)
 
@@ -138,7 +151,7 @@ class PureRegexp
         if index < renge.size
           n = Group.new([@child]*renge[index])
           n.patterns(input).times do |i|
-            d = n.match(ctx, input, i).matches
+            d = n.match(ctx, bref.clone, input, i).matches
             unless d.empty?
               m = d
               break
@@ -173,18 +186,18 @@ class PureRegexp
         @second = second
       end
 
-      def match(ctx, input, index)
+      def match(ctx, bref, input, index)
         if index == 0
           unless @first.nil?
             @first.patterns(input).times do |i|
-              m = @first.match(ctx, input, i).matches
+              m = @first.match(ctx, bref.clone, input, i).matches
               return Result.new(input.range, [m, []]) unless m.empty?
             end
           end
         elsif index == 1
           unless @second.nil?
             @second.patterns(input).times do |i|
-              m = @second.match(ctx, input, i).matches
+              m = @second.match(ctx, bref.clone, input, i).matches
               return Result.new(input.range, [[], m]) unless m.empty?
             end
           end
@@ -211,7 +224,7 @@ class PureRegexp
         @str = str
       end
 
-      def match(ctx, input, index)
+      def match(ctx, bref, input, index)
         m = []
         if input.option & IGNORECASE == IGNORECASE
           m = [[@str.length]] if input.str.downcase.index(@str.downcase) == 0
@@ -233,8 +246,35 @@ class PureRegexp
       end
     end
 
+    class BackReference
+      attr_reader :str
+      def initialize(tag)
+        @tag = tag
+      end
+
+      def match(ctx, bref, input, index)
+        m = []
+        if bref.key?(@tag)
+          str = bref[@tag]
+          if input.option & IGNORECASE == IGNORECASE
+            m = [[str.length]] if input.str.downcase.index(str.downcase) == 0
+          else
+            m = [[str.length]] if input.str.index(str) == 0
+          end
+        end
+        Result.new(input.range, m)
+      end
+
+      def submatch(ctx, input, matches)
+      end
+
+      def patterns(input)
+        1
+      end
+    end
+
     class Any
-      def match(ctx, input, index)
+      def match(ctx, bref, input, index)
         m = input.str.empty? ? [] : [[1]]
         if input.option & MULTILINE != MULTILINE && input.str[0] == "\n"
           m = []
@@ -260,7 +300,7 @@ class PureRegexp
         @inverse = inverse
       end
 
-      def match(ctx, input, index)
+      def match(ctx, bref, input, index)
         m = false
         unless input.str.empty?
           if input.option & IGNORECASE == IGNORECASE
@@ -282,7 +322,7 @@ class PureRegexp
     end
 
     class Front
-      def match(ctx, input, index)
+      def match(ctx, bref, input, index)
         m = input.range.first == 0 ? [[]] : []
         Result.new(input.range, m)
       end
@@ -296,7 +336,7 @@ class PureRegexp
     end
 
     class Back
-      def match(ctx, input, index)
+      def match(ctx, bref, input, index)
         m = input.range.first > input.range.last ? [[]] : []
         Result.new(input.range, m)
       end
