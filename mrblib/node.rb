@@ -149,15 +149,7 @@ class PureRegexp
 
       def submatch(ctx, input, matches)
         last = @last ? @last : input.to_s.length
-        groups = []
-        for i in @first..last
-          groups << Group.new([@child]*i)
-        end
-        groups.reverse! unless @reluctant
-
-        for i in 0..(groups.length-1)
-          groups[i].submatch(ctx, input, matches)
-        end
+        Group.new([@child]*matches.length).submatch(ctx, input, matches)
       end
 
       def make_reluctant
