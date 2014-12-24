@@ -61,7 +61,31 @@ class PureRegexp
           when 'H'
             nodes << CC_NON_HEX
           when *DIGITS
-            nodes << Node::BackReference.new(c.to_i)
+            nodes << Node::BackReference.new(c)
+          when 'k'
+            if regexp[i+1] == '<'
+              e = regexp.index('>', i+2)
+              if e.nil?
+                nodes << Node::String.new('\k')
+              else
+                name = regexp[i+2..(e-1)]
+                raise SyntaxError.new("group name is empty") if name.empty?
+                nodes << Node::BackReference.new(name)
+                i = e
+              end
+            elsif regexp[i+1] == '\''
+              e = regexp.index('\'', i+2)
+              if e.nil?
+                nodes << Node::String.new('\k')
+              else
+                name = regexp[i+2..(e-1)]
+                raise SyntaxError.new("group name is empty") if name.empty?
+                nodes << Node::BackReference.new(name)
+                i = e
+              end
+            else
+              nodes << Node::String.new('\k')
+            end
           else
             nodes << Node::String.new(c)
           end

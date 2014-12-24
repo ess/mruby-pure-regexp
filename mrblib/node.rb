@@ -83,7 +83,7 @@ class PureRegexp
             len[i] = n.flatten.inject(0){|sum, n| sum + n}
             if @nodes[i].is_a? Node::Group
               if !@nodes[i].tag.nil?
-                bref[@nodes[i].tag] = input.substr(l).str[0, len[i]]
+                bref[@nodes[i].tag.to_s] = input.substr(l).str[0, len[i]]
               end
             end
           end
@@ -92,7 +92,7 @@ class PureRegexp
 
         l = m.flatten.inject(0){|sum, n| sum + n}
         if !@tag.nil?
-          bref[@tag] = input.str[0, l]
+          bref[@tag.to_s] = input.str[0, l]
         end
 
         ctx.cache[key] = m

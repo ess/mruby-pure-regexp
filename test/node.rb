@@ -112,6 +112,8 @@ assert('PureRegexp : BackReference') do
   assert_true  /(...),\1+/ === "aaa,aaaaaa"
   assert_true  /(.(.).),\2+/ === "axa,xaaaaa"
   assert_false /(.(.).),\2+/ === "axa,axxxxx"
+  assert_true  /(.(.).),\k<2>+/ === "axa,xaaaaa"
+  assert_true  /(.(?<bb>.).),\k'bb'+/ === "axa,xaaaaa"
 end
 
 assert('PureRegexp : ReluctantOneOrMore') do
