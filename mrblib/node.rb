@@ -48,8 +48,8 @@ class PureRegexp
       end
 
       def match(ctx, input, index)
-        #key = [Group, input.range, @nodes, @tag]
-        #return Result.new(input.range, ctx.cache[key]) if ctx.cache.include?(key)
+        key = [Group, input.range, index, @nodes, @tag]
+        return Result.new(input.range, ctx.cache[key]) if ctx.cache.include?(key)
 
         return Result.new(input.range, [[]]) if @nodes.empty?
         idx = [0] * @nodes.length
@@ -82,7 +82,7 @@ class PureRegexp
           i += 1
         end
 
-        #ctx.cache[key] = m
+        ctx.cache[key] = m
         Result.new(input.range, m)
       end
 
@@ -127,8 +127,8 @@ class PureRegexp
       end
 
       def match(ctx, input, index)
-        #key = [Repeat, input.range, @child, @reluctant, @first, @last]
-        #return Result.new(input.range, ctx.cache[key]) if ctx.cache.include?(key)
+        key = [Repeat, input.range, index, @child, @reluctant, @first, @last]
+        return Result.new(input.range, ctx.cache[key]) if ctx.cache.include?(key)
 
         last = @last ? @last : input.to_s.length
         renge = (@first..last).to_a
@@ -146,7 +146,7 @@ class PureRegexp
           end
         end
 
-        #ctx.cache[key] = m
+        ctx.cache[key] = m
         Result.new(input.range, m)
       end
 
