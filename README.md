@@ -50,6 +50,7 @@ Pure mruby Regexp
 * ```\` ``` Substring before match
 * ```\'``` Substring after match
 * ```\+``` Last submatch
+* ```\k<name>``` Named submatch
 
 ## Options
 
