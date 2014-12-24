@@ -261,6 +261,8 @@ class PureRegexp
           else
             m = [[str.length]] if input.str.index(str) == 0
           end
+        else
+          raise SyntaxError.new("invalid backref number/name") if @tag != 0
         end
         Result.new(input.range, m)
       end
