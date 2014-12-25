@@ -24,7 +24,7 @@ class PureRegexp
       range = input.range
       len = input.str.length
       for i in 0..(len == 0 ? 0 : len-1)
-        result = @group.match(ctx, {}, input, 0)
+        result = @group.match(ctx, {}, input, -1)
         m = result.matches
         if !m.empty?
           @group.submatch(ctx, input, m)
@@ -60,13 +60,34 @@ class PureRegexp
         mat = [[]] * @nodes.length
         m = []
 
+        if index > 0
+          @nodes.length.times do |i|
+            rid = @nodes.length-i-1
+            pat = @nodes[rid].patterns(input)
+            idx[rid] = index % pat
+            index /= pat
+          end
+        end
+
         i = 0
         while i <= (@nodes.length-1)
+          if @tag == 0
+          end
           if idx[i] >= @nodes[i].patterns(input)
             break if i == 0
             idx[i] = 0
             idx[i-1] += 1
             i -= 1
+
+            #atomic grouping
+            t = @nodes[i]
+            if t.class == Node::Group && t.atomic
+              break if i == 0
+              idx[i] = 0
+              idx[i-1] += 1
+              i -= 1
+            end
+
             next
           end
           l = 0
@@ -114,7 +135,7 @@ class PureRegexp
       end
 
       def patterns(input)
-        1
+        @nodes.inject(1){|sum, n| sum * n.patterns(input)}
       end
     end
 
