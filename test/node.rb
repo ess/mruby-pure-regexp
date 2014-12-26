@@ -176,6 +176,8 @@ assert('PureRegexp : Group') do
   /a(b(?:c(d(?:e(?:f(g)h)i)j)k)l)m/.match("abcdefghijklm").to_a
 
   assert_equal ["zx", "zx", "z"], /((z)?x)?/.match("zx").to_a
+
+  assert_true /(((a*)))(((a*)))a/ === "aa"
 end
 
 assert('PureRegexp : NamedGroup') do

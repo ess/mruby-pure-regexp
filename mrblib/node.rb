@@ -96,7 +96,11 @@ class PureRegexp
           mat[i] = n
           if n.empty?
             idx[i] += 1
-            next
+            if index >= 0
+              break
+            else
+              next
+            end
           elsif i == @nodes.length - 1
             m = mat
             break
