@@ -72,19 +72,6 @@ class PureMatchData
     end
   end
 
-  def inspect
-    m = [to_s.inspect]
-    i = 1
-    captures.each do |c|
-      m << "#{i}:#{c.inspect}"
-      i += 1
-    end
-    names.each do |k|
-      m << "#{k}:#{self[k].inspect}"
-    end
-    "#<PureMatchData #{m.join(' ')}>"
-  end
-
   def [](*args)
     if args.size == 1 && (args[0].is_a? String)
       string[@namedsubmatches[args[0]]]

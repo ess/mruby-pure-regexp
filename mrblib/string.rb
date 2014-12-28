@@ -87,6 +87,7 @@ end
 
 class PureRegexp
   class ReplaceCapture
+    DIGITS = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
     META = ['`', '\'', '+', '&']
 
     def initialize(string)
@@ -104,29 +105,16 @@ class PureRegexp
             @template << c
           end
           meta = !meta
-        when 'k'
+        when *DIGITS
           if meta
-            if string[i+1] == '<'
-              e = string.index('>')
-              raise "invalid group name reference format" if e.nil?
-              @template << string[(i+2)..(e-1)].to_sym
-              i = e
-            else
-              @template << '\k'
-            end
-          else
-            @template << c
-          end
-        when '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'
-          if meta
-            @template << [c.to_i]
+            @template << c.to_sym
           else
             @template << c
           end
           meta = false
         when *META
           if meta
-            @template << [c]
+            @template << c.to_sym
           else
             @template << c
           end
@@ -144,10 +132,10 @@ class PureRegexp
     def to_s(matches)
       str = ""
       @template.each do |c|
-        if c.is_a? Array
-          c = c[0]
+        if c.is_a? Symbol
+          c = c.to_s
           case c
-          when 0, 1, 2, 3, 4, 5, 6, 7, 8, 9
+          when *DIGITS
             s = matches[c.to_s.to_i]
             s = "" if s.nil?
             str += s
@@ -162,12 +150,6 @@ class PureRegexp
           when '&'
             str += matches[0]
           end
-        elsif c.is_a? Symbol
-          c = c.to_s
-          unless matches.names.include?(c)
-            raise IndexError.new("undefined group name reference: #{c}")
-          end
-          str += matches[c]
         else
           str += c
         end

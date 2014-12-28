@@ -24,6 +24,8 @@ Pure mruby Regexp
 * ```{N,}?``` N or more (reluctant)
 * ```{,N}?``` N or less (reluctant)
 * ```{N,M}?``` Between N and M (reluctant)
+* ```^``` Start of line
+* ```$``` End of line
 * ```|``` Alternation
 * ```[]``` Character class
 * ```[^]``` Negated character class
@@ -32,11 +34,6 @@ Pure mruby Regexp
 * ```(?'name')``` Named group
 * ```(?:)``` Non-capturing group
 * ```(?>)``` Atomic group
-* ```\N``` Back reference
-* ```\k<N>``` Back reference
-* ```\k<name>``` Named back reference
-* ```^``` Start of line
-* ```$``` End of line
 * ```\w``` Word character
 * ```\W``` Non-word character
 * ```\s``` Whitespace character
@@ -53,7 +50,6 @@ Pure mruby Regexp
 * ```\` ``` Substring before match
 * ```\'``` Substring after match
 * ```\+``` Last submatch
-* ```\k<name>``` Named submatch
 
 ## Options
 

@@ -21,7 +21,6 @@ assert('String#gsub') do
   assert_equal "cbbackbcbb", "acbabackbacbab".gsub(/a(.?b)/, '\+')
   assert_equal "acbackbacbabackbacbabackbacb", "acbabackbacbab".gsub(/a(.?b)/, '\`')
   assert_equal "acbabackbacbab", "acbabackbacbab".gsub(/a(.?b)/, '\&')
-  assert_equal "cbbackbcbb", "acbabackbacbab".gsub(/a(?<aaa>.?b)/, '\k<aaa>')
 end
 
 assert('String#gsub!') do
