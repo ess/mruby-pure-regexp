@@ -225,11 +225,7 @@ class PureRegexp
 
     class CharacterClass
       def initialize(chars, inverse=false)
-        h = {}
-        for i in 0..(chars.length-1)
-          h[chars[i]] = 0
-        end
-        @chars = h.keys.join
+        @chars = chars.split('').uniq.join
         @inverse = inverse
       end
 
@@ -316,24 +312,6 @@ class PureRegexp
         end
       end
       r
-    end
-  end
-end
-
-# extension method
-# https://github.com/mruby/mruby/blob/master/mrbgems/mruby-array-ext/mrblib/array.rb
-unless Array.instance_methods(false).include?(:flatten)
-  class Array
-    def flatten(depth=nil)
-      ar = []
-      self.each do |e|
-        if e.is_a?(Array) && (depth.nil? || depth > 0)
-          ar += e.flatten(depth.nil? ? nil : depth - 1)
-        else
-          ar << e
-        end
-      end
-      ar
     end
   end
 end
