@@ -25,8 +25,8 @@ class PureRegexp
       len = input.str.length
       for i in 0..(len == 0 ? 0 : len-1)
         f = @group.fiber
-        result = @group.match(ctx, {}, input, -1)
-        m = result.matches
+        result = f.resume(ctx, {}, input)
+        m = result ? result.matches : []
         if !m.empty?
           @group.submatch(ctx, input, m)
           return PureMatchData.new(@regexp, input.to_s, ctx.submatch)
@@ -141,6 +141,9 @@ class PureRegexp
 
           e = !@nodes.empty?
           unless e
+            if !@tag.nil?
+              bref[@tag.to_s] = ""
+            end
             Fiber.yield(Result.new(input.range, []))
           end
 
@@ -155,6 +158,17 @@ class PureRegexp
                   else
                     fmap[i] = @nodes[i].fiber
                     mat[i-1] = []
+
+                    #atomic grouping
+                    t = @nodes[i-1]
+                    if t.class == Node::Group && t.atomic
+                      if i <= 1
+                        e = false
+                      else
+                        fmap[i-1] = @nodes[i-1].fiber
+                        mat[i-2] = []
+                      end
+                    end
                   end
                   break
                 else
@@ -163,6 +177,10 @@ class PureRegexp
               end
               if i == fmap.size - 1
                 unless mat[i].empty?
+                  l = mat.flatten.inject(0){|sum, n| sum + n}
+                  if !@tag.nil?
+                    bref[@tag.to_s] = bref[@tag.to_s] = input.str[0, l]
+                  end
                   Fiber.yield(Result.new(input.range, mat))
                   mat[i] = []
                 end
@@ -172,7 +190,6 @@ class PureRegexp
             end
           end
           nil
-
         end
       end
     end
@@ -292,6 +309,28 @@ class PureRegexp
       def patterns(input)
         2
       end
+
+      def fiber
+        Fiber.new do |ctx, bref, input|
+          if @first.nil?
+            Fiber.yield(Result.new(input.range, [[]]))
+          else
+            f = @first.fiber
+            while !(m = f.resume(ctx, bref, input)).nil?
+              Fiber.yield(Result.new(input.range, m.matches))
+            end
+          end
+          if @second.nil?
+            Fiber.yield(Result.new(input.range, [[]]))
+          else
+            f = @second.fiber
+            while !(m = f.resume(ctx, bref, input)).nil?
+              Fiber.yield(Result.new(input.range, m.matches))
+            end
+          end
+          nil
+        end
+      end
     end
 
     # leaf
@@ -321,6 +360,19 @@ class PureRegexp
       def patterns(input)
         1
       end
+
+      def fiber
+        Fiber.new do |ctx, bref, input|
+          m = []
+          if input.option & IGNORECASE == IGNORECASE
+            m = [[@str.length]] if input.str.downcase.index(@str.downcase) == 0
+          else
+            m = [[@str.length]] if input.str.index(@str) == 0
+          end
+          Fiber.yield(Result.new(input.range, m))
+          nil
+        end
+      end
     end
 
     class BackReference
@@ -349,6 +401,24 @@ class PureRegexp
 
       def patterns(input)
         1
+      end
+
+      def fiber
+        Fiber.new do |ctx, bref, input|
+          m = []
+          if bref.key?(@tag)
+            str = bref[@tag]
+            if input.option & IGNORECASE == IGNORECASE
+              m = [[str.length]] if input.str.downcase.index(str.downcase) == 0
+            else
+              m = [[str.length]] if input.str.index(str) == 0
+            end
+          else
+            raise SyntaxError.new("invalid backref number/name") if @tag != 0
+          end
+          Fiber.yield(Result.new(input.range, m))
+          nil
+        end
       end
     end
 
@@ -405,6 +475,22 @@ class PureRegexp
       def patterns(input)
         1
       end
+
+      def fiber
+        Fiber.new do |ctx, bref, input|
+          m = false
+          unless input.str.empty?
+            if input.option & IGNORECASE == IGNORECASE
+              m = !@chars.downcase.index(input.str[0].downcase).nil?
+            else
+              m = !@chars.index(input.str[0]).nil?
+            end
+          end
+          m = !m if @inverse
+          Fiber.yield(Result.new(input.range, m ? [[1]] : []))
+          nil
+        end
+      end
     end
 
     class Front
@@ -419,6 +505,14 @@ class PureRegexp
       def patterns(input)
         1
       end
+
+      def fiber
+        Fiber.new do |ctx, bref, input|
+          m = input.range.first == 0 ? [[]] : []
+          Fiber.yield(Result.new(input.range, m))
+          nil
+        end
+      end
     end
 
     class Back
@@ -432,6 +526,14 @@ class PureRegexp
 
       def patterns(input)
         1
+      end
+
+      def fiber
+        Fiber.new do |ctx, bref, input|
+          m = input.range.first > input.range.last ? [[]] : []
+          Fiber.yield(Result.new(input.range, m))
+          nil
+        end
       end
     end
   end
