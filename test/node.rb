@@ -108,6 +108,14 @@ assert('PureRegexp : Alternation') do
   assert_false /^(aa|a+|cc|k)+/ === "jkaacck"
 end
 
+assert('PureRegexp : BackReference') do
+  assert_true  /(...),\1+/ === "aaa,aaaaaa"
+  assert_true  /(.(.).),\2+/ === "axa,xaaaaa"
+  assert_false /(.(.).),\2+/ === "axa,axxxxx"
+  assert_true  /(.(.).),\k<2>+/ === "axa,xaaaaa"
+  assert_true  /(.(?<bb>.).),\k'bb'+/ === "axa,xaaaaa"
+end
+
 assert('PureRegexp : ReluctantOneOrMore') do
   assert_equal ["abc", "abc"], /(abc)+?/.match("abcabc").to_a
   assert_equal ["abcabcabc", "abc"], /^(abc)+?abc$/.match("abcabcabc").to_a
@@ -168,6 +176,8 @@ assert('PureRegexp : Group') do
   /a(b(?:c(d(?:e(?:f(g)h)i)j)k)l)m/.match("abcdefghijklm").to_a
 
   assert_equal ["zx", "zx", "z"], /((z)?x)?/.match("zx").to_a
+
+  assert_true /(((a*)))(((a*)))a/ === "aa"
 end
 
 assert('PureRegexp : NamedGroup') do

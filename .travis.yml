@@ -11,5 +11,6 @@ before_script:
   - git clone https://github.com/mruby/mruby.git
   - cd mruby
   - cp -fp ../mruby-pure-regexp/.travis_build_config.rb build_config.rb
-script: 
+script:
   - make all test
+  - bin/mruby ../mruby-pure-regexp/benchmark.rb

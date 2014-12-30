@@ -24,10 +24,11 @@ class PureRegexp
       range = input.range
       len = input.str.length
       for i in 0..(len == 0 ? 0 : len-1)
-        result = @group.match(ctx, input)
+        f = @group.fiber
+        result = @group.match(ctx, {}, input, -1)
         m = result.matches
         if !m.empty?
-          @group.submatch(ctx, input, m[0])
+          @group.submatch(ctx, input, m)
           return PureMatchData.new(@regexp, input.to_s, ctx.submatch)
         end
         input = input.substr(1)
@@ -47,48 +48,71 @@ class PureRegexp
         @atomic = atomic
       end
 
-      def match(ctx, input)
-        key = [Group, input.range, @nodes, @tag]
-        return Result.new(input.range, ctx.cache[key]) if ctx.cache.include?(key)
-
-        m = []
+      def match(ctx, bref, input, index)
         return Result.new(input.range, [[]]) if @nodes.empty?
-        stack = [@nodes[0].match(ctx, input).matches]
-        tagstack = []
-        while !stack.empty?
-          l = stack.inject(0) do |sum, n|
-            if n.empty?
-              sum
-            else
-              sum + n.first.flatten.inject(0) {|sum, n| sum + n}
-            end
-          end
-          if stack.last.empty? || stack.length >= @nodes.length
-            top = stack.map{|n| n.first}
-            top.pop
-            stack.last.each do |n|
-              t = top + [n]
-              m.push(t)
-            end
-            stack.pop
-            unless stack.empty?
-              # atomic grouping
-              t = @nodes[stack.length-1]
-              if t.class == Node::Group && t.atomic
-                stack.pop
-              end
-              stack.last.shift unless stack.empty?
-            end
-          else
-            l = stack.inject(0) do |sum, n|
-              sum + n.first.flatten.inject(0) {|sum, n| sum + n}
-            end
-            i = input.substr(l)
-            stack.push(@nodes[stack.length].match(ctx, i).matches)
+        idx = [0] * @nodes.length
+        len = [0] * @nodes.length
+        mat = [[]] * @nodes.length
+        m = []
+
+        if index > 0
+          @nodes.length.times do |i|
+            rid = @nodes.length-i-1
+            pat = @nodes[rid].patterns(input)
+            idx[rid] = index % pat
+            index /= pat
           end
         end
 
-        ctx.cache[key] = m
+        i = 0
+        while i <= (@nodes.length-1)
+          if idx[i] >= @nodes[i].patterns(input)
+            break if i == 0
+            idx[i] = 0
+            idx[i-1] += 1
+            i -= 1
+
+            #atomic grouping
+            t = @nodes[i]
+            if t.class == Node::Group && t.atomic
+              break if i == 0
+              idx[i] = 0
+              idx[i-1] += 1
+              i -= 1
+            end
+
+            next
+          end
+          l = 0
+          l = len[0..(i-1)].inject(0) {|sum, n| sum + n} if i > 0
+          n = @nodes[i].match(ctx, bref, input.substr(l), idx[i]).matches
+          mat[i] = n
+          if n.empty?
+            idx[i] += 1
+            if index >= 0
+              break
+            else
+              next
+            end
+          elsif i == @nodes.length - 1
+            m = mat
+            break
+          else
+            len[i] = n.flatten.inject(0){|sum, n| sum + n}
+            if @nodes[i].is_a? Node::Group
+              if !@nodes[i].tag.nil?
+                bref[@nodes[i].tag.to_s] = input.substr(l).str[0, len[i]]
+              end
+            end
+          end
+          i += 1
+        end
+
+        l = m.flatten.inject(0){|sum, n| sum + n}
+        if !@tag.nil?
+          bref[@tag.to_s] = input.str[0, l]
+        end
+
         Result.new(input.range, m)
       end
 
@@ -103,6 +127,52 @@ class PureRegexp
         len = matches.flatten.inject(0) {|sum, n| sum + n}
         if len > 0 && !@tag.nil?
           ctx.submatch[@tag] = (input.range.first)..(input.range.first+len-1)
+        end
+      end
+
+      def patterns(input)
+        @nodes.inject(1){|sum, n| sum * n.patterns(input)}
+      end
+
+      def fiber
+        Fiber.new do |ctx, bref, input|
+          fmap = @nodes.map {|n| n.fiber}
+          mat = [[]] * @nodes.length
+
+          e = !@nodes.empty?
+          unless e
+            Fiber.yield(Result.new(input.range, []))
+          end
+
+          while e
+            l = 0
+            fmap.size.times do |i|
+              if mat[i].empty?
+                r = fmap[i].resume(ctx, bref, input.substr(l))
+                if r.nil?
+                  if i == 0
+                    e = false
+                  else
+                    fmap[i] = @nodes[i].fiber
+                    mat[i-1] = []
+                  end
+                  break
+                else
+                  mat[i] = r.matches
+                end
+              end
+              if i == fmap.size - 1
+                unless mat[i].empty?
+                  Fiber.yield(Result.new(input.range, mat))
+                  mat[i] = []
+                end
+              else
+                l += mat[i].flatten.inject(0) {|sum, n| sum + n}
+              end
+            end
+          end
+          nil
+
         end
       end
     end
@@ -128,22 +198,23 @@ class PureRegexp
         last == other.last
       end
 
-      def match(ctx, input)
-        key = [Repeat, input.range, @child, @reluctant, @first, @last]
-        return Result.new(input.range, ctx.cache[key]) if ctx.cache.include?(key)
-
+      def match(ctx, bref, input, index)
         last = @last ? @last : input.to_s.length
-        groups = []
-        for i in @first..last
-          groups << Group.new([@child]*i)
-        end
-        groups.reverse! unless @reluctant
+        renge = (@first..last).to_a
+        renge.reverse! unless @reluctant
+
         m = []
-        groups.each do |g|
-          m += g.match(ctx, input).matches
+        if index < renge.size
+          n = Group.new([@child]*renge[index])
+          n.patterns(input).times do |i|
+            d = n.match(ctx, bref.clone, input, i).matches
+            unless d.empty?
+              m = d
+              break
+            end
+          end
         end
 
-        ctx.cache[key] = m
         Result.new(input.range, m)
       end
 
@@ -155,6 +226,33 @@ class PureRegexp
       def make_reluctant
         Repeat.new(@child, true, @first, @last)
       end
+
+      def patterns(input)
+        last = @last ? @last : input.to_s.length
+        last - @first + 1
+      end
+
+      def fiber
+        Fiber.new do |ctx, bref, input|
+          last = @last ? @last : input.to_s.length
+          range = (@first..last).to_a
+          range.reverse! unless @reluctant
+
+          range.each do |i|
+            if i == 0
+              Fiber.yield(Result.new(input.range, [[]]))
+            else
+              n = Group.new([@child]*i)
+              f = n.fiber
+              while !(m = f.resume(ctx, bref, input)).nil?
+                Fiber.yield(Result.new(input.range, m.matches))
+              end
+            end
+          end
+
+          nil
+        end
+      end
     end
 
     class Alternation
@@ -165,14 +263,21 @@ class PureRegexp
         @second = second
       end
 
-      def match(ctx, input)
-        unless @first.nil?
-          m = @first.match(ctx, input).matches
-          return Result.new(input.range, [[m, []]]) unless m.empty?
-        end
-        unless @second.nil?
-           m = @second.match(ctx, input).matches
-          return Result.new(input.range, [[[], m]]) unless m.empty?
+      def match(ctx, bref, input, index)
+        if index == 0
+          unless @first.nil?
+            @first.patterns(input).times do |i|
+              m = @first.match(ctx, bref.clone, input, i).matches
+              return Result.new(input.range, [m, []]) unless m.empty?
+            end
+          end
+        elsif index == 1
+          unless @second.nil?
+            @second.patterns(input).times do |i|
+              m = @second.match(ctx, bref.clone, input, i).matches
+              return Result.new(input.range, [[], m]) unless m.empty?
+            end
+          end
         end
         Result.new(input.range, [])
       end
@@ -183,6 +288,10 @@ class PureRegexp
           @second.submatch(ctx, input, matches[1]) unless @second.nil?
         end
       end
+
+      def patterns(input)
+        2
+      end
     end
 
     # leaf
@@ -192,7 +301,7 @@ class PureRegexp
         @str = str
       end
 
-      def match(ctx, input)
+      def match(ctx, bref, input, index)
         m = []
         if input.option & IGNORECASE == IGNORECASE
           m = [[@str.length]] if input.str.downcase.index(@str.downcase) == 0
@@ -208,10 +317,43 @@ class PureRegexp
       def +(other)
         String.new(@str + other.str)
       end
+
+      def patterns(input)
+        1
+      end
+    end
+
+    class BackReference
+      attr_reader :str
+      def initialize(tag)
+        @tag = tag
+      end
+
+      def match(ctx, bref, input, index)
+        m = []
+        if bref.key?(@tag)
+          str = bref[@tag]
+          if input.option & IGNORECASE == IGNORECASE
+            m = [[str.length]] if input.str.downcase.index(str.downcase) == 0
+          else
+            m = [[str.length]] if input.str.index(str) == 0
+          end
+        else
+          raise SyntaxError.new("invalid backref number/name") if @tag != 0
+        end
+        Result.new(input.range, m)
+      end
+
+      def submatch(ctx, input, matches)
+      end
+
+      def patterns(input)
+        1
+      end
     end
 
     class Any
-      def match(ctx, input)
+      def match(ctx, bref, input, index)
         m = input.str.empty? ? [] : [[1]]
         if input.option & MULTILINE != MULTILINE && input.str[0] == "\n"
           m = []
@@ -221,6 +363,21 @@ class PureRegexp
 
       def submatch(ctx, input, matches)
       end
+
+      def patterns(input)
+        1
+      end
+
+      def fiber
+        Fiber.new do |ctx, bref, input|
+          m = input.str.empty? ? [] : [[1]]
+          if input.option & MULTILINE != MULTILINE && input.str[0] == "\n"
+            m = []
+          end
+          Fiber.yield(Result.new(input.range, m))
+          nil
+        end
+      end
     end
 
     class CharacterClass
@@ -229,7 +386,7 @@ class PureRegexp
         @inverse = inverse
       end
 
-      def match(ctx, input)
+      def match(ctx, bref, input, index)
         m = false
         unless input.str.empty?
           if input.option & IGNORECASE == IGNORECASE
@@ -244,25 +401,37 @@ class PureRegexp
 
       def submatch(ctx, input, matches)
       end
+
+      def patterns(input)
+        1
+      end
     end
 
     class Front
-      def match(ctx, input)
+      def match(ctx, bref, input, index)
         m = input.range.first == 0 ? [[]] : []
         Result.new(input.range, m)
       end
 
       def submatch(ctx, input, matches)
       end
+
+      def patterns(input)
+        1
+      end
     end
 
     class Back
-      def match(ctx, input)
+      def match(ctx, bref, input, index)
         m = input.range.first > input.range.last ? [[]] : []
         Result.new(input.range, m)
       end
 
       def submatch(ctx, input, matches)
+      end
+
+      def patterns(input)
+        1
       end
     end
   end
