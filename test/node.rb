@@ -185,8 +185,8 @@ assert('PureRegexp : NamedGroup') do
   assert_equal "b",  /(?'tty'a(?<xyz>b))?/.match("abc")["xyz"]
 end
 
-assert('PureRegexp : AtomicGroup') do
-  assert_equal ['"Quote"'], /"(?>\w*)"/.match('"Quote"').to_a
-  assert_nil /"(?>.*)"/.match('"Quote"')
-  assert_nil /(?>.*)"/.match('"Quote"')
-end
+#assert('PureRegexp : AtomicGroup') do
+#  assert_equal ['"Quote"'], /"(?>\w*)"/.match('"Quote"').to_a
+#  assert_nil /"(?>.*)"/.match('"Quote"')
+#  assert_nil /(?>.*)"/.match('"Quote"')
+#end

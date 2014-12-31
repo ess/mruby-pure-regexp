@@ -144,7 +144,7 @@ class PureRegexp
             if !@tag.nil?
               bref[@tag.to_s] = ""
             end
-            Fiber.yield(Result.new(input.range, []))
+            Fiber.yield(Result.new(input.range, [[]]))
           end
 
           while e
@@ -170,6 +170,8 @@ class PureRegexp
                       end
                     end
                   end
+                  break
+                elsif r.matches.empty?
                   break
                 else
                   mat[i] = r.matches
@@ -259,11 +261,13 @@ class PureRegexp
             if i == 0
               Fiber.yield(Result.new(input.range, [[]]))
             else
-              n = Group.new([@child]*i)
-              f = n.fiber
-              while !(m = f.resume(ctx, bref, input)).nil?
-                Fiber.yield(Result.new(input.range, m.matches))
+              matches = []
+              offset = 0
+              i.times do
+                m = @child.fiber.resume(ctx, bref, input.substr(offset))
+                matches << m.matches unless m.nil? || m.matches.empty?
               end
+              Fiber.yield(Result.new(input.range, matches)) if matches.length == i
             end
           end
 
@@ -313,21 +317,22 @@ class PureRegexp
       def fiber
         Fiber.new do |ctx, bref, input|
           if @first.nil?
-            Fiber.yield(Result.new(input.range, [[]]))
+            Fiber.yield(Result.new(input.range, [[], []]))
           else
             f = @first.fiber
             while !(m = f.resume(ctx, bref, input)).nil?
-              Fiber.yield(Result.new(input.range, m.matches))
+              Fiber.yield(Result.new(input.range, [m.matches, []])) unless m.matches.empty?
             end
           end
           if @second.nil?
-            Fiber.yield(Result.new(input.range, [[]]))
+            Fiber.yield(Result.new(input.range, [[], []]))
           else
             f = @second.fiber
             while !(m = f.resume(ctx, bref, input)).nil?
-              Fiber.yield(Result.new(input.range, m.matches))
+              Fiber.yield(Result.new(input.range, [[], m.matches])) unless m.matches.empty?
             end
           end
+          Fiber.yield(Result.new(input.range, []))
           nil
         end
       end
