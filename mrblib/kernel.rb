@@ -1,5 +1,5 @@
 module Kernel
-  def =~(_)
-    nil
-  end
+  #def =~(_)
+    #nil
+  #end
 end
