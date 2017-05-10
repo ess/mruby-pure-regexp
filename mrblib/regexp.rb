@@ -1,10 +1,6 @@
 class PureRegexp
   attr_reader :source
 
-  def self.source(string, option = nil)
-    self.new(string, option).source
-  end
-
   def self.compile(string, option = nil)
     self.new(string, option)
   end
