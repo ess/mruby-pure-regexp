@@ -44,6 +44,10 @@ class PureRegexp
         c = regexp[i]
         if escape
           case c
+          when 'A'
+            nodes << Node::Front.new()
+          when 'b'
+            nodes << Node::Back.new()
           when 'w'
             nodes << CC_WORD
           when 'W'
