@@ -1,4 +1,17 @@
 class PureRegexp
+  ESCAPE_LIST = {
+    '0x0a' => '\n', '0x09' => '\t',
+    '0x0d' => '\r', '0x0c' => '\f',
+    '0x20' => '\0x20', '#' => '\#',
+    '$' => '\$', '(' => '\(',
+    ')' => '\)', '*' => '\*',
+    '+' => '\+', '-' => '\-',
+    '.' => '\.', '?' => '\?',
+    '[' => '\[', '}' => '\}',
+    ']' => '\]', '^' => '\^',
+    '{' => '\{', '|' => '\|'
+  }
+
   attr_reader :source
 
   def self.compile(string, option = nil)
@@ -6,7 +19,9 @@ class PureRegexp
   end
 
   def self.escape(string)
-    string
+    tmp = str.gsub '\\', '\\\\'
+    ESCAPE_LIST.each {|k, v| tmp = tmp.gsub(k, v)}
+    tmp
   end
 
   def initialize(string, option = nil)
