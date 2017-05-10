@@ -3,6 +3,82 @@ class String
   alias_method :orig_gsub!, :gsub!
   alias_method :orig_sub,   :sub
   alias_method :orig_sub!,  :sub!
+  alias_method :old_slice, :slice
+  alias_method :old_square_brancket, :[]
+
+  def [](*args)
+    return old_square_brancket(*args) unless args[0].class == Regexp
+
+    if args.size == 2
+      match = args[0].match(self)
+      if match
+        if args[1] == 0
+          str = match[0]
+        else
+          str = match.captures[args[1] - 1]
+        end
+        return str
+      end
+    end
+
+    match_data = args[0].match(self)
+    if match_data
+      result = match_data.to_s
+      return result
+    end
+  end
+
+  alias_method :slice, :[]
+
+  def slice!(*args)
+    if args.size < 2
+      result = slice(*args)
+      nth = args[0]
+
+      if nth.class == Regexp
+        lm = Regexp.last_match
+        self[nth] = '' if result
+        Regexp.last_match = lm
+      else
+        self[nth] = '' if result
+      end
+    else
+      result = slice(*args)
+
+      nth = args[0]
+      len = args[1]
+
+      if nth.class == Regexp
+        lm = Regexp.last_match
+        self[nth, len] = '' if result
+        Regexp.last_match = lm
+      else
+        self[nth, len] = '' if result && nth != self.size
+      end
+    end
+
+    result
+  end
+
+  alias_method :old_index, :index
+
+  def index(pattern, pos=0)
+    if pattern.class == Regexp
+      str = self[pos..-1]
+      if str
+        if num = (pattern =~ str)
+          if pos < 0
+            num += self.size
+          end
+          return num + pos
+        end
+      end
+      nil
+    else
+      self.old_index(pattern, pos)
+    end
+  end
+
 
   def scan(reg, &block)
     a = []
@@ -81,6 +157,14 @@ class String
       self
     else
       orig_sub!(*args, &block)
+    end
+  end
+
+  def =~(a)
+    begin
+      (a.class.to_s == 'String' ? Regexp.new(a.to_s) : a) =~ self
+    rescue
+      false
     end
   end
 end
