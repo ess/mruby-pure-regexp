@@ -5,6 +5,10 @@ class PureRegexp
     self.new(string, option)
   end
 
+  def self.escape(string)
+    string
+  end
+
   def initialize(string, option = nil)
     @source = string
     @root = Parser.new().parse(string)
